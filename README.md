@@ -1,6 +1,6 @@
 # ninetales - A Python library to convert between Python data model paradigms
 
-> "The fox spirit is an especially prolific shapeshifter"
+> The fox spirit is an especially prolific shapeshifter
 
 There are a few too many ways of describing a data model in Python--see below code chunk for a non-comprehensive list. All of them represent the same concept, but have different approaches in their philosophies and implementations. This library strives, to a reasonable and useful extent, to provide a seamless translation between them.
 ```python
