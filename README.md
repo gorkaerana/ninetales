@@ -31,7 +31,8 @@ class FooNamedTuple(TypedDict):
 
 # Attributes can be specified via:
 # - a sequence of strings (as below)
-# - a single string with each field name separated by whitespace and/or commas (e.g., "bar baz", "bar, baz")
+# - a single string with each field name separated by whitespace and/or commas 
+# (e.g., "bar baz", "bar, baz")
 FooNamedTuple2 = namedtuple("FooNamedTuple2", ["bar", "baz"])
 
 
@@ -61,7 +62,7 @@ FooPydantic2 = pydantic.create_model("FooPydantic2", bar=(str, ...), baz=(int, 1
 ```
 
 ## Etymology
-[Ninetales](https://bulbapedia.bulbagarden.net/wiki/Ninetales_(Pok%C3%A9mon)) is a Pokemon loosely based on the [nine-tailed fox](https://en.wikipedia.org/wiki/Nine-tailed_fox), mythical fox entity in Chinese, Korean, Vietnamese, and Japanese folklore. "The fox spirit is an especially prolific shapeshifter", which is the approach this library takes to converting between Python data model paragigms.
+[Ninetales](https://bulbapedia.bulbagarden.net/wiki/Ninetales_(Pok%C3%A9mon)) is a Pokemon loosely based on the [nine-tailed fox](https://en.wikipedia.org/wiki/Nine-tailed_fox), mythical fox entity in Chinese, Korean, Vietnamese, and Japanese folklore. "The fox spirit is an especially prolific shapeshifter", is the approach this library takes to converting between Python data model paragigms.
 
 ## Installation
 For the time being and until we have a stable enough API:
