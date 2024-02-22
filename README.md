@@ -15,46 +15,49 @@ import pydantic
 @dataclass
 class FooDataclass:
     bar: str
-	baz: int = 1
+    baz: int = 1
 
 
 class FooNamedTuple(NamedTuple):
     bar: str
-	baz: int = 1
+    baz: int = 1
 
 
 # `typing.TypedDict` does not allow right hand side assignment
 class FooNamedTuple(TypedDict):
     bar: str
-	baz: int
+    baz: int
 
 
 # Attributes can be specified via:
 # - a sequence of strings (as below)
 # - a single string with each field name separated by whitespace and/or commas (e.g., "bar baz", "bar, baz")
-FooNamedTuple2 = namedtuple("FooNamedTuple2", ["bar", "baz"])):
+FooNamedTuple2 = namedtuple("FooNamedTuple2", ["bar", "baz"])
 
 
 @attrs.define
-def FooAttrs:
+class FooAttrs:
     bar: str
-	baz: int = 1
+    baz: int = 1
 
 
-FooAttrs2 = attrs.make_class("FooAttrs2", {"bar": attrs.field(type=str), "baz": attrs.field(type=int, default=1)})
+FooAttrs2 = attrs.make_class(
+    "FooAttrs2",
+    {"bar": attrs.field(type=str), "baz": attrs.field(type=int, default=1)}
+)
 
 
-def FooMsgspec(msgspec.Struct):
+class FooMsgspec(msgspec.Struct):
     bar: str
-	baz: int = 1
+    baz: int = 1
 
 
-def FooPydantic(pydantic.BaseModel):
+class FooPydantic(pydantic.BaseModel):
     bar: str
-	baz: int = 1
+    baz: int = 1
 
 
-FooPydantic2 = attrs.create_model("FooPydantic2", bar=(str, ...), baz=(int, 1)})
+FooPydantic2 = pydantic.create_model("FooPydantic2", bar=(str, ...), baz=(int, 1))
 ```
 
 ## Etymology
