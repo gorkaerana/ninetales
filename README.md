@@ -31,8 +31,8 @@ class FooNamedTuple(TypedDict):
 
 # Attributes can be specified via:
 # - a sequence of strings (as below)
-# - a single string with each field name separated by whitespace and/or commas 
-# (e.g., "bar baz", "bar, baz")
+# - a single string with each field name separated by whitespace 
+# and/or commas (e.g., "bar baz", "bar, baz")
 FooNamedTuple2 = namedtuple("FooNamedTuple2", ["bar", "baz"])
 
 
