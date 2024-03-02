@@ -84,7 +84,7 @@ class IntermediateRepresentation(NamedTuple):
                 "class_def__bases": class_def.bases,
                 "class_def__keywords": class_def.keywords,
                 "class_def__decorator_list": class_def.decorator_list,
-                "class_def__type_params": class_def.type_params,
+                # "class_def__type_params": class_def.type_params,
             },
         )
 
