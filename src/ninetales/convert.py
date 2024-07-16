@@ -19,6 +19,9 @@ class AttributeInfo(NamedTuple):
     type_: str | None = None
     default_value: str | None = None
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(name={self.name}, type_={self.type_}, default_value={self.default_value})"
+
     @classmethod
     def from_Expr(cls, expr: ast.Expr):
         e_value = expr.value
@@ -80,6 +83,9 @@ class DataModel:
         self.name = name
         self.definition_options = definition_options
         self.attributes = attributes
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(name={repr(self.name)}, definition_options={repr(self.definition_options)}, attributes={repr(self.attributes)})"
 
 
 class Converter(ast.NodeVisitor):
