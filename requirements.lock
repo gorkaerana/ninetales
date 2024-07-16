@@ -6,5 +6,10 @@
 #   features: []
 #   all-features: false
 #   with-sources: false
+#   generate-hashes: false
 
 -e file:.
+attrs==23.2.0
+    # via ninetales
+msgspec==0.18.6
+    # via ninetales

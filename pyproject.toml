@@ -5,7 +5,10 @@ description = "A Python library to convert between Python data model paradigms"
 authors = [
     { name = "Gorka Eraña", email = "gera@baselifescience.com" }
 ]
-dependencies = []
+dependencies = [
+    "attrs>=23.2.0",
+    "msgspec>=0.18.6",
+]
 readme = "README.md"
 requires-python = ">= 3.10"
 
@@ -18,7 +21,11 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = ["ipython", "attrs", "msgspec", "pydantic", "mypy", "ast_decompiler"]
+dev-dependencies = [
+    "ipython",
+    "mypy",
+    "pytest>=8.2.2",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true
