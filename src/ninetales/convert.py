@@ -1,18 +1,12 @@
 from __future__ import annotations
 import dataclasses
-from typing import Any, NamedTuple, Type, Protocol, TYPE_CHECKING
+from typing import Any, NamedTuple, Type, TYPE_CHECKING
 
 import attrs
 import msgspec
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
-
-
-class NamedTupleProtocol(Protocol):
-    _asdict: dict[str, Any]
-    _field_defaults: dict[str, Any]
-    _fields: tuple[str]
 
 
 class NoDefaultType:
@@ -112,7 +106,7 @@ class DataModel(NamedTuple):
         )
 
     @classmethod
-    def from_namedtuple(cls, dm: NamedTupleProtocol) -> DataModel:
+    def from_namedtuple(cls, dm: NamedTuple) -> DataModel:
         dm_class = type(dm)
         return cls(
             name=dm_class.__name__,
