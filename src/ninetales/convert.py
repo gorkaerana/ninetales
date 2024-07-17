@@ -17,7 +17,7 @@ class NoDefault:
 NO_DEFAULT = NoDefault()
 
 
-def no_default_if_is_misc_missing(e):
+def no_default_if_misc_missing(e):
     """Returns `NO_DEFAULT` if `e` is one of
     - `attrs.NOTHING`
     - `dataclasses.MISSING`
@@ -50,12 +50,12 @@ class AttributeInfo(NamedTuple):
         return cls(
             attribute.name,
             attribute.type,
-            no_default_if_is_misc_missing(attribute.default),
+            no_default_if_misc_missing(attribute.default),
         )
 
     @classmethod
     def from_dataclasses_field(cls, field: dataclasses.Field) -> AttributeInfo:
-        return cls(field.name, field.type, no_default_if_is_misc_missing(field.default))
+        return cls(field.name, field.type, no_default_if_misc_missing(field.default))
 
     @classmethod
     def from_msgspec_field_info(
@@ -64,7 +64,7 @@ class AttributeInfo(NamedTuple):
         return cls(
             field_info.name,
             field_info.type,
-            no_default_if_is_misc_missing(field_info.default),
+            no_default_if_misc_missing(field_info.default),
         )
 
 
@@ -113,9 +113,7 @@ class DataModel(NamedTuple):
                 AttributeInfo(
                     name=f,
                     type=dm_class.__annotations__.get(f),
-                    default=no_default_if_is_misc_missing(
-                        dm_class._field_defaults.get(f)
-                    ),
+                    default=no_default_if_misc_missing(dm_class._field_defaults.get(f)),
                 )
                 for f in dm_class._fields
             ],
