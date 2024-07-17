@@ -55,43 +55,51 @@ class DataModel(NamedTuple):
 
     @classmethod
     def from_attrs(cls, dm) -> DataModel:
+        dm_class = dm.__class__
         return cls(
-            dm.__class__.__name__,
-            [AttributeInfo.from_attrs_attribute(a) for a in attrs.fields(dm.__class__)],
+            name=dm_class.__name__,
+            attributes=[
+                AttributeInfo.from_attrs_attribute(a) for a in attrs.fields(dm_class)
+            ],
         )
 
     @classmethod
     def from_dataclass(cls, dm) -> DataModel:
+        dm_class = dm.__class__
         return cls(
-            dm.__class__.__name__,
-            [
+            name=dm_class.__name__,
+            attributes=[
                 AttributeInfo.from_dataclasses_field(f)
-                for f in dataclasses.fields(dm.__class__)
+                for f in dataclasses.fields(dm_class)
             ],
         )
 
     @classmethod
     def from_msgspec(cls, dm) -> DataModel:
+        dm_class = dm.__class__
         return cls(
-            dm.__class__.__name__,
-            [
+            name=dm_class.__name__,
+            attributes=[
                 AttributeInfo.from_msgspec_field_info(fi)
-                for fi in msgspec.structs.fields(dm.__class__)
+                for fi in msgspec.structs.fields(dm_class)
             ],
         )
 
     @classmethod
     def from_namedtuple(cls, dm) -> DataModel:
-        dm_type = type(dm)
-        attributes: list[AttributeInfo] = []
-        for field_name in dm._fields:
-            type_ = dm_type.__annotations__.get(field_name)
-            default = (
-                NO_DEFAULT
-                if ((d := dm_type._field_defaults.get(field_name)) is None)
-                else d
-            )
-            attributes.append(
-                AttributeInfo(name=field_name, type=type_, default=default)
-            )
-        return cls(dm.__class__.__name__, attributes)
+        dm_class = dm.__class__
+        return cls(
+            name=dm_class.__name__,
+            attributes=[
+                AttributeInfo(
+                    name=f,
+                    type=dm_class.__annotations__.get(f),
+                    default=(
+                        NO_DEFAULT
+                        if ((d := dm_class._field_defaults.get(f)) is None)
+                        else d
+                    ),
+                )
+                for f in dm_class._fields
+            ],
+        )
