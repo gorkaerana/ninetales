@@ -1,20 +1,30 @@
 from __future__ import annotations
 import dataclasses
-from typing import Any, NamedTuple, Type
+from typing import Any, NamedTuple, Type, Protocol, TYPE_CHECKING
 
 import attrs
 import msgspec
 
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
 
-class NoDefault:
+
+class NamedTupleProtocol(Protocol):
+    __annotations__: dict[str, Any]
+    _asdict: dict[str, Any]
+    _field_defaults: dict[str, Any]
+    _fields: tuple[str]
+
+
+class NoDefaultType:
     def __repr__(self):
         return self.__class__.__name__
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, type(self))
+        return isinstance(other, self.__class__)
 
 
-NO_DEFAULT = NoDefault()
+NO_DEFAULT = NoDefaultType()
 MISSING_TYPES = [
     attrs.NOTHING,
     dataclasses.MISSING,
@@ -37,7 +47,7 @@ def no_default_if_misc_missing(o):
 class AttributeInfo(NamedTuple):
     name: str
     type: Type | None
-    default: Any | NoDefault
+    default: Any | NoDefaultType
 
     @classmethod
     def from_attrs_attribute(cls, attribute: attrs.Attribute) -> AttributeInfo:
@@ -71,8 +81,8 @@ class DataModel(NamedTuple):
     attributes: list[AttributeInfo]
 
     @classmethod
-    def from_attrs(cls, dm) -> DataModel:
-        dm_class = dm.__class__
+    def from_attrs(cls, dm: attrs.AttrsInstance) -> DataModel:
+        dm_class = type(dm)
         return cls(
             name=dm_class.__name__,
             attributes=[
@@ -81,8 +91,8 @@ class DataModel(NamedTuple):
         )
 
     @classmethod
-    def from_dataclass(cls, dm) -> DataModel:
-        dm_class = dm.__class__
+    def from_dataclass(cls, dm: DataclassInstance) -> DataModel:
+        dm_class = type(dm)
         return cls(
             name=dm_class.__name__,
             attributes=[
@@ -92,8 +102,8 @@ class DataModel(NamedTuple):
         )
 
     @classmethod
-    def from_msgspec(cls, dm) -> DataModel:
-        dm_class = dm.__class__
+    def from_msgspec(cls, dm: msgspec.Struct) -> DataModel:
+        dm_class = type(dm)
         return cls(
             name=dm_class.__name__,
             attributes=[
@@ -103,8 +113,8 @@ class DataModel(NamedTuple):
         )
 
     @classmethod
-    def from_namedtuple(cls, dm) -> DataModel:
-        dm_class = dm.__class__
+    def from_namedtuple(cls, dm: NamedTupleProtocol) -> DataModel:
+        dm_class = type(dm)
         return cls(
             name=dm_class.__name__,
             attributes=[
