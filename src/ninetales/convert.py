@@ -1,4 +1,4 @@
-from __future__ import annotations
+nfrom __future__ import annotations
 import collections
 import dataclasses
 from typing import Any, ForwardRef, NamedTuple, Type, TYPE_CHECKING
@@ -45,8 +45,11 @@ def no_default_if_misc_missing(o):
 
 
 def resolve_if_forward_ref(t):
-    """ """
+    """If `t` is a `ForwardRef` it returns an evaluated version of it, otherwise
+    it returns `t`
+    """
     # TODO: do this only for "base" types
+    # TODO: I might be shooting myself in the foot with this?
     if isinstance(t, ForwardRef):
         return t._evaluate(globals(), locals(), frozenset())
     return t
