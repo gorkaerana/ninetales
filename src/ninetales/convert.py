@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 
 
 class NamedTupleProtocol(Protocol):
-    __annotations__: dict[str, Any]
     _asdict: dict[str, Any]
     _field_defaults: dict[str, Any]
     _fields: tuple[str]
