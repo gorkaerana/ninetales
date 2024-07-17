@@ -79,3 +79,19 @@ class DataModel(NamedTuple):
                 for fi in msgspec.structs.fields(dm.__class__)
             ],
         )
+
+    @classmethod
+    def from_namedtuple(cls, dm) -> DataModel:
+        dm_type = type(dm)
+        attributes: list[AttributeInfo] = []
+        for field_name in dm._fields:
+            type_ = dm_type.__annotations__.get(field_name)
+            default = (
+                NO_DEFAULT
+                if ((d := dm_type._field_defaults.get(field_name)) is None)
+                else d
+            )
+            attributes.append(
+                AttributeInfo(name=field_name, type=type_, default=default)
+            )
+        return cls(dm.__class__.__name__, attributes)

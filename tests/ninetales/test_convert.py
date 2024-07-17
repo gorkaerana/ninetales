@@ -1,4 +1,5 @@
 import dataclasses
+from typing import NamedTuple
 
 import attrs
 import msgspec
@@ -19,18 +20,26 @@ def attrs_object():
 @pytest.fixture
 def dataclass_object():
     @dataclasses.dataclass
-    class Bar:
+    class Foo:
         a: int = dataclasses.field()
 
-    return Bar(1)
+    return Foo(1)
+
+
+@pytest.fixture
+def namedtuple_object():
+    class Foo(NamedTuple):
+        a: int
+
+    return Foo(1)
 
 
 @pytest.fixture
 def msgspec_object():
-    class Baz(msgspec.Struct):
+    class Foo(msgspec.Struct):
         a: int = msgspec.field()
 
-    return Baz(1)
+    return Foo(1)
 
 
 def test_attribute_info_from_attrs_attribute(attrs_object):
@@ -65,6 +74,13 @@ def test_data_model_from_dataclass(dataclass_object):
     data_model = DataModel.from_dataclass(dataclass_object)
     assert data_model == DataModel(
         dataclass_object.__class__.__name__, [AttributeInfo("a", int, NO_DEFAULT)]
+    )
+
+
+def test_data_model_from_namedtuple(namedtuple_object):
+    data_model = DataModel.from_namedtuple(namedtuple_object)
+    assert data_model == DataModel(
+        namedtuple_object.__class__.__name__, [AttributeInfo("a", int, NO_DEFAULT)]
     )
 
 
