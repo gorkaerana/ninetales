@@ -5,7 +5,13 @@ import attrs
 import msgspec
 import pytest
 
-from ninetales.convert import AttributeInfo, DataModel, NO_DEFAULT
+from ninetales.convert import (
+    AttributeInfo,
+    DataModel,
+    NO_DEFAULT,
+    MISSING_TYPES,
+    no_default_if_misc_missing,
+)
 
 
 @pytest.fixture
@@ -40,6 +46,11 @@ def msgspec_object():
         a: int = msgspec.field()
 
     return Foo(1)
+
+
+@pytest.mark.parametrize("o", MISSING_TYPES)
+def test_no_default_if_misc_missing_returns_true_for_missing_types(o):
+    assert no_default_if_misc_missing(o)
 
 
 def test_attribute_info_from_attrs_attribute(attrs_object):

@@ -15,29 +15,23 @@ class NoDefault:
 
 
 NO_DEFAULT = NoDefault()
+MISSING_TYPES = [
+    attrs.NOTHING,
+    dataclasses.MISSING,
+    msgspec.NODEFAULT,
+    None,
+]
 
 
-def no_default_if_misc_missing(e):
-    """Returns `NO_DEFAULT` if `e` is one of
+def no_default_if_misc_missing(o):
+    """Returns `NO_DEFAULT` if `o` is one of
     - `attrs.NOTHING`
     - `dataclasses.MISSING`
     - `msgspec.NODEFAULT`
     - `None`
-    otherwise it returns `e`
+    otherwise it returns `o`
     """
-    return (
-        NO_DEFAULT
-        if any(
-            e is missing_type
-            for missing_type in [
-                attrs.NOTHING,
-                dataclasses.MISSING,
-                msgspec.NODEFAULT,
-                None,
-            ]
-        )
-        else e
-    )
+    return NO_DEFAULT if any(o is mt for mt in MISSING_TYPES) else o
 
 
 class AttributeInfo(NamedTuple):
