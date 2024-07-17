@@ -49,8 +49,14 @@ def msgspec_object():
 
 
 @pytest.mark.parametrize("o", MISSING_TYPES)
-def test_no_default_if_misc_missing_returns_true_for_missing_types(o):
-    assert no_default_if_misc_missing(o)
+def test_no_default_if_misc_missing_returns_no_default_for_missing_types(o):
+    assert no_default_if_misc_missing(o) == NO_DEFAULT
+
+
+# TODO: improve this with hypothesis
+@pytest.mark.parametrize("o", ["a", b"a", 1, 1.0, 1j])
+def test_no_default_if_misc_missing_is_identity_for_non_missing_types(o):
+    assert no_default_if_misc_missing(o) == o
 
 
 def test_attribute_info_from_attrs_attribute(attrs_object):
