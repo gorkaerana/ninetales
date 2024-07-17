@@ -37,34 +37,38 @@ def no_default_if_misc_missing(o):
 class AttributeInfo(NamedTuple):
     name: str
     type: Type | None
-    default: Any
+    default: Any | NoDefault
 
     @classmethod
     def from_attrs_attribute(cls, attribute: attrs.Attribute) -> AttributeInfo:
         return cls(
-            attribute.name,
-            attribute.type,
-            no_default_if_misc_missing(attribute.default),
+            name=attribute.name,
+            type=attribute.type,
+            default=no_default_if_misc_missing(attribute.default),
         )
 
     @classmethod
     def from_dataclasses_field(cls, field: dataclasses.Field) -> AttributeInfo:
-        return cls(field.name, field.type, no_default_if_misc_missing(field.default))
+        return cls(
+            name=field.name,
+            type=field.type,
+            default=no_default_if_misc_missing(field.default),
+        )
 
     @classmethod
     def from_msgspec_field_info(
         cls, field_info: msgspec.structs.FieldInfo
     ) -> AttributeInfo:
         return cls(
-            field_info.name,
-            field_info.type,
-            no_default_if_misc_missing(field_info.default),
+            name=field_info.name,
+            type=field_info.type,
+            default=no_default_if_misc_missing(field_info.default),
         )
 
 
 class DataModel(NamedTuple):
     name: str
-    attributes: list[AttributeInfo] = []
+    attributes: list[AttributeInfo]
 
     @classmethod
     def from_attrs(cls, dm) -> DataModel:
