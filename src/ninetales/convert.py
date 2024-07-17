@@ -17,6 +17,29 @@ class NoDefault:
 NO_DEFAULT = NoDefault()
 
 
+def no_default_if_is_misc_missing(e):
+    """Returns `NO_DEFAULT` if `e` is one of
+    - `attrs.NOTHING`
+    - `dataclasses.MISSING`
+    - `msgspec.NODEFAULT`
+    - `None`
+    otherwise it returns `e`
+    """
+    return (
+        NO_DEFAULT
+        if any(
+            e is missing_type
+            for missing_type in [
+                attrs.NOTHING,
+                dataclasses.MISSING,
+                msgspec.NODEFAULT,
+                None,
+            ]
+        )
+        else e
+    )
+
+
 class AttributeInfo(NamedTuple):
     name: str
     type: Type | None
@@ -27,16 +50,12 @@ class AttributeInfo(NamedTuple):
         return cls(
             attribute.name,
             attribute.type,
-            NO_DEFAULT if (d := attribute.default) is attrs.NOTHING else d,
+            no_default_if_is_misc_missing(attribute.default),
         )
 
     @classmethod
     def from_dataclasses_field(cls, field: dataclasses.Field) -> AttributeInfo:
-        return cls(
-            field.name,
-            field.type,
-            NO_DEFAULT if (d := field.default) is dataclasses.MISSING else d,
-        )
+        return cls(field.name, field.type, no_default_if_is_misc_missing(field.default))
 
     @classmethod
     def from_msgspec_field_info(
@@ -45,7 +64,7 @@ class AttributeInfo(NamedTuple):
         return cls(
             field_info.name,
             field_info.type,
-            NO_DEFAULT if (d := field_info.default) is msgspec.NODEFAULT else d,
+            no_default_if_is_misc_missing(field_info.default),
         )
 
 
@@ -94,10 +113,8 @@ class DataModel(NamedTuple):
                 AttributeInfo(
                     name=f,
                     type=dm_class.__annotations__.get(f),
-                    default=(
-                        NO_DEFAULT
-                        if ((d := dm_class._field_defaults.get(f)) is None)
-                        else d
+                    default=no_default_if_is_misc_missing(
+                        dm_class._field_defaults.get(f)
                     ),
                 )
                 for f in dm_class._fields
