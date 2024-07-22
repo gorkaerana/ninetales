@@ -1,10 +1,12 @@
-nfrom __future__ import annotations
+from __future__ import annotations
 import collections
 import dataclasses
 from typing import Any, ForwardRef, NamedTuple, Type, TYPE_CHECKING
 
 import attrs
 import msgspec
+import pydantic
+import pydantic_core
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
@@ -23,6 +25,7 @@ MISSING_TYPES = [
     attrs.NOTHING,
     dataclasses.MISSING,
     msgspec.NODEFAULT,
+    pydantic_core.PydanticUndefined,
     None,
 ]
 
@@ -38,6 +41,7 @@ def no_default_if_misc_missing(o):
     - `attrs.NOTHING`
     - `dataclasses.MISSING`
     - `msgspec.NODEFAULT`
+    - `pydantic_core.PydanticUndefined`
     - `None`
     otherwise it returns `o`
     """
@@ -138,6 +142,21 @@ class DataModel(NamedTuple):
             ],
         )
 
+    @classmethod
+    def from_pydantic(cls, dm: pydantic.BaseModel) -> DataModel:
+        dm_class = type(dm)
+        return cls(
+            name=dm_class.__name__,
+            attributes=[
+                AttributeInfo(
+                    name=name,
+                    type=fi.annotation,
+                    default=no_default_if_misc_missing(fi.default),
+                )
+                for name, fi in dm_class.model_fields.items()
+            ],
+        )
+
     def to_attrs(self):
         attrs_attributes = {}
         for a in self.attributes:
@@ -167,3 +186,21 @@ class DataModel(NamedTuple):
 
     def to_namedtuple(self):
         return collections.namedtuple(self.name, [a.name for a in self.attributes])
+
+    def to_pydantic(self):
+        return pydantic.create_model(
+            self.name,
+            **{
+                a.name: (
+                    a.type,
+                    pydantic.fields.Field(
+                        default=(
+                            pydantic_core.PydanticUndefined
+                            if a.default is pydantic_core.PydanticUndefined
+                            else a.default
+                        ),
+                    ),
+                )
+                for a in self.attributes
+            },
+        )

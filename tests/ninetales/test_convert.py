@@ -3,6 +3,7 @@ from typing import NamedTuple
 
 import attrs
 import msgspec
+import pydantic
 import pytest
 
 from ninetales.convert import (
@@ -33,6 +34,14 @@ def dataclass_object():
 
 
 @pytest.fixture
+def msgspec_object():
+    class Foo(msgspec.Struct):
+        a: int = msgspec.field()
+
+    return Foo(1)
+
+
+@pytest.fixture
 def namedtuple_object():
     class Foo(NamedTuple):
         a: int
@@ -41,11 +50,11 @@ def namedtuple_object():
 
 
 @pytest.fixture
-def msgspec_object():
-    class Foo(msgspec.Struct):
-        a: int = msgspec.field()
+def pydantic_object():
+    class Foo(pydantic.BaseModel):
+        a: int
 
-    return Foo(1)
+    return Foo(a=1)
 
 
 @pytest.mark.parametrize("o", MISSING_TYPES)
@@ -94,6 +103,13 @@ def test_data_model_from_dataclass(dataclass_object):
     )
 
 
+def test_data_model_from_msgspec(msgspec_object):
+    data_model = DataModel.from_msgspec(msgspec_object)
+    assert data_model == DataModel(
+        msgspec_object.__class__.__name__, [AttributeInfo("a", int, NO_DEFAULT)]
+    )
+
+
 def test_data_model_from_namedtuple(namedtuple_object):
     data_model = DataModel.from_namedtuple(namedtuple_object)
     assert data_model == DataModel(
@@ -101,8 +117,9 @@ def test_data_model_from_namedtuple(namedtuple_object):
     )
 
 
-def test_data_model_from_msgspec(msgspec_object):
-    data_model = DataModel.from_msgspec(msgspec_object)
+def test_data_model_from_pydantic(pydantic_object):
+    data_model = DataModel.from_pydantic(pydantic_object)
+    print(data_model)
     assert data_model == DataModel(
-        msgspec_object.__class__.__name__, [AttributeInfo("a", int, NO_DEFAULT)]
+        pydantic_object.__class__.__name__, [AttributeInfo("a", int, NO_DEFAULT)]
     )
