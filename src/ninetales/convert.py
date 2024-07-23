@@ -90,6 +90,12 @@ class AttributeInfo(NamedTuple):
             default=no_default_if_misc_missing(field_info.default),
         )
 
+    def to_attrs_attribute(self) -> attrs.Attribute:
+        kwargs: dict[str, Any] = {"type": self.type}
+        if self.default is not NO_DEFAULT:
+            kwargs["default"] = self.default
+        return attrs.Attribute(**kwargs)
+
 
 class DataModel(NamedTuple):
     name: str
@@ -158,13 +164,10 @@ class DataModel(NamedTuple):
         )
 
     def to_attrs(self):
-        attrs_attributes = {}
-        for a in self.attributes:
-            attrs_kwargs = {"type": a.type}
-            if a.default is not NO_DEFAULT:
-                attrs_kwargs["default"] = a.default
-            attrs_attributes[a.name] = attrs.field(**attrs_kwargs)
-        return attrs.make_class(name=self.name, attrs=attrs_attributes)
+        return attrs.make_class(
+            name=self.name,
+            attrs={a.name: a.to_attrs_attribute() for a in self.attributes},
+        )
 
     def to_dataclass(self):
         dataclass_fields = [
@@ -188,19 +191,15 @@ class DataModel(NamedTuple):
         return collections.namedtuple(self.name, [a.name for a in self.attributes])
 
     def to_pydantic(self):
-        return pydantic.create_model(
-            self.name,
-            **{
-                a.name: (
-                    a.type,
-                    pydantic.fields.Field(
-                        default=(
-                            pydantic_core.PydanticUndefined
-                            if a.default is pydantic_core.PydanticUndefined
-                            else a.default
-                        ),
-                    ),
-                )
-                for a in self.attributes
-            },
-        )
+        pydantic_fields = {}
+        for attribute in self.attributes:
+            default = (
+                pydantic_core.PydanticUndefined
+                if attribute.default is pydantic_core.PydanticUndefined
+                else attribute.default
+            )
+            pydantic_fields[attribute.name] = (
+                attribute.type,
+                pydantic.fields.Field(default=default),
+            )
+        return pydantic.create_model(self.name, **pydantic_fields)
