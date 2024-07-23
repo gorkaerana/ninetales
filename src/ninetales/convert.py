@@ -1,7 +1,14 @@
 from __future__ import annotations
 import collections
 import dataclasses
-from typing import Any, ForwardRef, NamedTuple, Type, TYPE_CHECKING
+from typing import (
+    Any,
+    ForwardRef,
+    NamedTuple,
+    Type,
+    TYPE_CHECKING,
+    Protocol,
+)
 
 import attrs
 import msgspec
@@ -10,6 +17,20 @@ import pydantic_core
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
+
+
+class TypedDictProtocol(Protocol):
+    __annotations__: dict[str, Any]
+    __name__: str
+
+    def __optional_keys__(self) -> frozenset[str]:
+        ...
+
+    def __required_keys__(self) -> frozenset[str]:
+        ...
+
+    def __total__(self) -> bool:
+        ...
 
 
 class NoDefaultType:
@@ -61,8 +82,8 @@ def resolve_if_forward_ref(t):
 
 class AttributeInfo(NamedTuple):
     name: str
-    type: Type | None
-    default: Any | NoDefaultType
+    type: type | None
+    default: Any | NoDefaultType = NO_DEFAULT
 
     @classmethod
     def from_attrs_attribute(cls, attribute: attrs.Attribute) -> AttributeInfo:
@@ -102,64 +123,71 @@ class DataModel(NamedTuple):
     attributes: list[AttributeInfo]
 
     @classmethod
-    def from_attrs(cls, dm: attrs.AttrsInstance) -> DataModel:
-        dm_class = type(dm)
+    def from_attrs(cls, dm: Type[attrs.AttrsInstance]) -> DataModel:
         return cls(
-            name=dm_class.__name__,
+            name=dm.__name__,
             attributes=[
-                AttributeInfo.from_attrs_attribute(a) for a in attrs.fields(dm_class)
+                AttributeInfo.from_attrs_attribute(a) for a in attrs.fields(dm)
             ],
         )
 
     @classmethod
-    def from_dataclass(cls, dm: DataclassInstance) -> DataModel:
-        dm_class = type(dm)
+    def from_dataclass(cls, dm: Type[DataclassInstance]) -> DataModel:
         return cls(
-            name=dm_class.__name__,
+            name=dm.__name__,
             attributes=[
-                AttributeInfo.from_dataclasses_field(f)
-                for f in dataclasses.fields(dm_class)
+                AttributeInfo.from_dataclasses_field(f) for f in dataclasses.fields(dm)
             ],
         )
 
     @classmethod
-    def from_msgspec(cls, dm: msgspec.Struct) -> DataModel:
-        dm_class = type(dm)
+    def from_msgspec(cls, dm: Type[msgspec.Struct]) -> DataModel:
         return cls(
-            name=dm_class.__name__,
+            name=dm.__name__,
             attributes=[
                 AttributeInfo.from_msgspec_field_info(fi)
-                for fi in msgspec.structs.fields(dm_class)
+                for fi in msgspec.structs.fields(dm)
             ],
         )
 
     @classmethod
-    def from_namedtuple(cls, dm: NamedTuple) -> DataModel:
-        dm_class = type(dm)
+    def from_namedtuple(cls, dm: Type[NamedTuple]) -> DataModel:
         return cls(
-            name=dm_class.__name__,
+            name=dm.__name__,
             attributes=[
                 AttributeInfo(
                     name=f,
-                    type=resolve_if_forward_ref(dm_class.__annotations__.get(f)),
-                    default=no_default_if_misc_missing(dm_class._field_defaults.get(f)),
+                    type=resolve_if_forward_ref(dm.__annotations__.get(f)),
+                    default=no_default_if_misc_missing(dm._field_defaults.get(f)),
                 )
-                for f in dm_class._fields
+                for f in dm._fields
             ],
         )
 
     @classmethod
-    def from_pydantic(cls, dm: pydantic.BaseModel) -> DataModel:
-        dm_class = type(dm)
+    def from_pydantic(cls, dm: Type[pydantic.BaseModel]) -> DataModel:
         return cls(
-            name=dm_class.__name__,
+            name=dm.__name__,
             attributes=[
                 AttributeInfo(
                     name=name,
-                    type=fi.annotation,
+                    type=resolve_if_forward_ref(fi.annotation),
                     default=no_default_if_misc_missing(fi.default),
                 )
-                for name, fi in dm_class.model_fields.items()
+                for name, fi in dm.model_fields.items()
+            ],
+        )
+
+    @classmethod
+    def from_typeddict(cls, dm: Type[TypedDictProtocol]) -> DataModel:
+        return cls(
+            name=dm.__name__,
+            attributes=[
+                AttributeInfo(
+                    name=name,
+                    type=no_default_if_misc_missing(type_),
+                )
+                for name, type_ in dm.__annotations__.items()
             ],
         )
 
@@ -170,12 +198,18 @@ class DataModel(NamedTuple):
         )
 
     def to_dataclass(self):
-        dataclass_fields = [
-            (a.name, a.type)
-            if a.default is NO_DEFAULT
-            else (a.name, a.type, dataclasses.field(default=a.default))
-            for a in self.attributes
-        ]
+        dataclass_fields = []
+        for a in self.attributes:
+            if a.default is NO_DEFAULT:
+                dataclass_fields.append((a.name, a.type))
+            else:
+                dataclass_fields.append(
+                    (
+                        a.name,
+                        a.type,
+                        dataclasses.field(default=a.default),
+                    )
+                )
         return dataclasses.make_dataclass(self.name, dataclass_fields)
 
     def to_msgspec(self):
