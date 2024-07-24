@@ -6,6 +6,7 @@ from typing import (
     ForwardRef,
     NamedTuple,
     Type,
+    TypedDict,
     TYPE_CHECKING,
     Protocol,
 )
@@ -112,10 +113,13 @@ class AttributeInfo(NamedTuple):
         )
 
     def to_attrs_attribute(self) -> attrs.Attribute:
-        kwargs: dict[str, Any] = {"type": self.type}
-        if self.default is not NO_DEFAULT:
-            kwargs["default"] = self.default
-        return attrs.Attribute(**kwargs)
+        kwargs: dict[str, Any] = {
+            "type": self.type,
+            "default": (
+                self.default if self.default is not NO_DEFAULT else attrs.NOTHING
+            ),
+        }
+        return attrs.field(**kwargs)
 
 
 class DataModel(NamedTuple):
@@ -229,7 +233,7 @@ class DataModel(NamedTuple):
         for attribute in self.attributes:
             default = (
                 pydantic_core.PydanticUndefined
-                if attribute.default is pydantic_core.PydanticUndefined
+                if attribute.default is NO_DEFAULT
                 else attribute.default
             )
             pydantic_fields[attribute.name] = (
@@ -237,3 +241,6 @@ class DataModel(NamedTuple):
                 pydantic.fields.Field(default=default),
             )
         return pydantic.create_model(self.name, **pydantic_fields)
+
+    def to_typeddict(self):
+        return TypedDict(self.name, {a.name: a.type for a in self.attributes})
